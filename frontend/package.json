@@ -1,0 +1,30 @@
+{
+  "name": "bookmyshow-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.jsx",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "axios": "^1.6.2",
+    "react-router-dom": "^6.16.0",
+    "tailwindcss": "^3.3.5",
+    "postcss": "^8.4.31",
+    "autoprefixer": "^10.4.16"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.1.1",
+    "vite": "^5.0.2",
+    "eslint": "^8.52.0",
+    "eslint-plugin-react": "^7.33.2",
+    "vitest": "^0.34.6",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/jest-dom": "^6.1.5"
+  }
+}
