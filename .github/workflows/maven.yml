@@ -28,3 +28,15 @@ jobs:
       - name: Build and Test
         working-directory: backend
         run: mvn clean verify
+
+      - name: OWASP Dependency Check
+        working-directory: backend
+        run: mvn org.owasp:dependency-check-maven:check
+      
+      - name: Sonar Analysis
+        working-directory: backend
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          run: mvn sonar:sonar
+
+      - 
