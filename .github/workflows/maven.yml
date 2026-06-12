@@ -1,15 +1,8 @@
 name: Maven Build
 
 on:
-  pull_request:
-    branches:
-      - main
-      - master
-
   push:
-    branches:
-      - main
-      - master
+  pull_request:
 
 jobs:
   build:
@@ -32,9 +25,9 @@ jobs:
       - name: OWASP Dependency Check
         working-directory: backend
         run: mvn org.owasp:dependency-check-maven:check
-      
+
       - name: Sonar Analysis
         working-directory: backend
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          run: mvn sonar:sonar
+        run: mvn sonar:sonar
