@@ -3,7 +3,8 @@ name: CodeQL
 on:
   pull_request:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   analyze:
@@ -11,6 +12,8 @@ jobs:
 
     permissions:
       security-events: write
+      actions: read
+      contents: read
 
     strategy:
       fail-fast: false
@@ -18,12 +21,23 @@ jobs:
         language: [ 'java' ]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: github/codeql-action/init@v3
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
         with:
           languages: java
 
-      - uses: github/codeql-action/autobuild@v3
+      - name: Build Project
+        working-directory: backend
+        run: mvn clean compile
 
-      - uses: github/codeql-action/analyze@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
