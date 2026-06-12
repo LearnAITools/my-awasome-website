@@ -35,6 +35,15 @@ const Header = () => {
               >
                 My Bookings
               </button>
+              {user?.role === 'ROLE_ADMIN' && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="hover:text-secondary transition font-semibold"
+                  title="Admin Dashboard"
+                >
+                  ⚙️ Admin
+                </button>
+              )}
               <div className="flex items-center gap-4">
                 <span className="text-sm">{user?.email}</span>
                 <button

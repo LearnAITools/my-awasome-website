@@ -19,14 +19,16 @@ import org.website.security.JwtTokenProvider;
 @Slf4j
 @Transactional
 public class AuthService {
-    @Autowired
+
     private UserRepository userRepository;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private JwtTokenProvider tokenProvider;
+
+    AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider tokenProvider) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.tokenProvider = tokenProvider;
+    }
 
     public AuthResponse signup(SignupRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -49,7 +51,8 @@ public class AuthService {
             "User registered successfully",
             savedUser.getId(),
             savedUser.getEmail(),
-            savedUser.getFullName()
+            savedUser.getFullName(),
+            savedUser.getRole().name()
         );
     }
 
@@ -71,7 +74,8 @@ public class AuthService {
             "Login successful",
             user.getId(),
             user.getEmail(),
-            user.getFullName()
+            user.getFullName(),
+            user.getRole().name()
         );
     }
 

@@ -22,17 +22,18 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class ShowService {
-    @Autowired
+
     private ShowRepository showRepository;
-
-    @Autowired
     private MovieRepository movieRepository;
-
-    @Autowired
     private TheaterRepository theaterRepository;
-
-    @Autowired
     private SeatRepository seatRepository;
+
+    ShowService(ShowRepository showRepository, MovieRepository movieRepository, TheaterRepository theaterRepository, SeatRepository seatRepository) {
+        this.showRepository = showRepository;
+        this.movieRepository = movieRepository;
+        this.theaterRepository = theaterRepository;
+        this.seatRepository = seatRepository;
+    }
 
     public List<ShowDTO> getAllShows() {
         return showRepository.findAll().stream()
@@ -76,6 +77,16 @@ public class ShowService {
 
         log.info("Show created: {} at {} on {}", movie.getTitle(), theater.getName(), showTime);
         return convertToDTO(savedShow);
+    }
+
+    public ShowDTO createShowFromDTO(ShowDTO showDTO) {
+        return createShow(
+            showDTO.getMovieId(),
+            showDTO.getTheaterId(),
+            showDTO.getShowTime(),
+            showDTO.getScreen(),
+            showDTO.getPriceInCents()
+        );
     }
 
     private void createSeatsForShow(Show show) {

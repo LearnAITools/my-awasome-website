@@ -1,64 +1,59 @@
-# BookMyShow - Movie Ticket Booking Application
+# BookMyShow - Movie Ticket Booking Platform
 
-A full-stack movie ticket booking platform built with React (Vite) and Spring Boot, featuring seat selection, Razorpay payment integration, and JWT authentication.
+Enterprise-grade full-stack movie ticket booking application with Spring Boot 3.4.0, React + Vite, and Razorpay integration.
 
-## 🎯 Features
+**Tech Stack:**
+- **Backend:** Java 17, Spring Boot 3.4.0, Maven, H2 Database, Spring Security + JWT
+- **Frontend:** React 18.2, Vite 5.0, Tailwind CSS, Axios
+- **Payment:** Razorpay Sandbox API
+- **Database:** H2 (in-memory, auto-create schema)
+- **Code Quality:** SonarQube, JUnit 5, Mockito, JaCoCo (85%+ coverage target)
 
-- **Movie Browsing**: Search and filter movies by genre and language
-- **Show Management**: View available shows with seat information
-- **Seat Selection**: Interactive 10x10 seat matrix with real-time status updates
-- **User Authentication**: JWT-based login and signup
-- **Payment Integration**: Razorpay sandbox integration for secure payments
-- **Booking Management**: View and manage your bookings
-- **Admin Dashboard**: Add movies and manage shows (future enhancement)
-- **Optimistic Locking**: Prevent race conditions during seat booking
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+## ✨ Features
 
-## 📋 Tech Stack
-
-### Backend
-- **Framework**: Spring Boot 3.3.10
-- **Language**: Java 17+
-- **Build Tool**: Gradle
-- **Database**: H2 (In-Memory)
-- **Security**: Spring Security + JWT
-- **ORM**: Spring Data JPA / Hibernate
-- **Payment Gateway**: Razorpay Java SDK
-
-### Frontend
-- **Framework**: React 18.2
-- **Build Tool**: Vite 5.0
-- **Styling**: Tailwind CSS 3.3
-- **HTTP Client**: Axios 1.6
-- **Router**: React Router 6.16
-- **State Management**: React Context API
+- **Movie Browsing**: Search and filter movies by genre, language, and release date
+- **Show Management**: View available shows with interactive seat matrix
+- **Seat Selection**: 10x10 interactive grid with real-time availability
+- **User Authentication**: JWT-based signup/login with role-based access control
+- **Payment Integration**: Razorpay Sandbox with HMAC-SHA256 signature verification
+- **Booking Management**: Create, view, and cancel bookings with reference tracking
+- **Admin Features**: Add movies, schedule shows, view analytics
+- **Optimistic Locking**: Prevent double-booking via @Version concurrency control
+- **Error Tracking**: Standardized error codes (ERRxxx) for debugging
+- **Responsive Design**: Mobile-first UI with Tailwind CSS
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+- **Java**: JDK 17 or higher (tested with Java 25)
+- **Maven**: 3.8.0 or higher
 - **Node.js**: v18 or higher
-- **Java**: JDK 17 or higher
-- **Git**: Optional
+- **IDE**: IntelliJ IDEA (recommended - has built-in Lombok support)
 
 ### Installation
 
-#### Option 1: Automated Setup (macOS/Linux)
+#### Option 1: Automated Setup (macOS/Linux) - RECOMMENDED
 ```bash
 chmod +x setup-local.sh
 ./setup-local.sh
 ```
 
+This automatically verifies dependencies and starts both servers.
+
 #### Option 2: Manual Setup
 
-**Backend Setup:**
+**Backend Setup (Maven):**
 ```bash
 cd backend
-./gradlew bootRun
+mvn clean compile spring-boot:run
 ```
 
-**Frontend Setup (in a new terminal):**
+**Frontend Setup (new terminal):**
 ```bash
 cd frontend
+npm install
+npm run dev
+```
 npm install
 npm run dev
 ```

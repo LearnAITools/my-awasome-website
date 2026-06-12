@@ -30,6 +30,7 @@ export const movieAPI = {
   searchMovies: (title) => api.get('/movies/search', { params: { title } }),
   getMoviesByGenre: (genre) => api.get(`/movies/genre/${genre}`),
   getMoviesByLanguage: (language) => api.get(`/movies/language/${language}`),
+  createMovie: (movieData) => api.post('/admin/movies', movieData),
 };
 
 // Show API
@@ -38,6 +39,7 @@ export const showAPI = {
   getShowById: (id) => api.get(`/shows/${id}`),
   getShowsByMovie: (movieId) => api.get(`/shows/movie/${movieId}`),
   getShowsByTheater: (theaterId) => api.get(`/shows/theater/${theaterId}`),
+  createShow: (showData) => api.post('/admin/shows', showData),
 };
 
 // Booking API
@@ -46,6 +48,7 @@ export const bookingAPI = {
     api.post('/bookings', { showId, selectedSeats }),
   getBookingById: (id) => api.get(`/bookings/${id}`),
   getBookingByReference: (reference) => api.get(`/bookings/reference/${reference}`),
+  getAllBookings: () => api.get('/admin/bookings'),
   getUserBookings: () => api.get('/bookings/user'),
   cancelBooking: (id) => api.delete(`/bookings/${id}`),
 };

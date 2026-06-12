@@ -22,10 +22,10 @@ public class Seat {
     @Column(nullable = false)
     private Integer seatNumber;
 
-    @Column(nullable = false)
+    @Column(name = "seat_row", nullable = false)
     private Integer row;
 
-    @Column(nullable = false)
+    @Column(name = "seat_column", nullable = false)
     private Integer column;
 
     @Enumerated(EnumType.STRING)

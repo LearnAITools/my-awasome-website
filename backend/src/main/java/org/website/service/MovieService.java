@@ -15,8 +15,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class MovieService {
-    @Autowired
+    
     private MovieRepository movieRepository;
+
+    MovieService(MovieRepository movieRepository) {
+        this.movieRepository = movieRepository;
+    }
 
     public List<MovieDTO> getAllMovies() {
         return movieRepository.findAll().stream()

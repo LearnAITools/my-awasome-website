@@ -11,12 +11,12 @@ You are a Lead Software Architect. Your task is to initialize a clean, modular, 
 1. Generate a standardized, cross-platform file tree layout separating backend and frontend domains.
 2. Formulate proper dependency manifests ensuring all build tasks run cleanly without cross-environment collisions.
 3. Configure **React (Vite + JavaScript)** for the UI folder structure.
-4. Configure **Java Spring Boot (Gradle)** targeting Java 17+ for the backend services folder.
+4. Configure **Java Spring Boot (Maven)** targeting Java 21+ for the backend services folder.
 
 ### Outputs Required
 * **Workspace Tree Structure Visual Diagram**
 * **`frontend/package.json`**: Baseline setup including Tailwind CSS and Axios.
-* **`backend/build.gradle`**: Baseline build manifest including Spring Web, Spring Data JPA, H2 Database, and Razorpay Java SDK dependencies.
+* **`backend/pom.xml`**: Baseline build manifest including Spring Web, Spring Data JPA, H2 Database, and Razorpay Java SDK dependencies.
 
 ---
 

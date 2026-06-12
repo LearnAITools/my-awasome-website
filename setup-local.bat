@@ -57,7 +57,7 @@ echo.
 REM Start backend
 echo Starting backend server on port 8080...
 cd backend
-start "BookMyShow Backend" cmd /k "gradlew.bat bootRun"
+start "BookMyShow Backend" cmd /k "mvn clean compile spring-boot:run"
 cd ..
 echo ✅ Backend started in new window
 
