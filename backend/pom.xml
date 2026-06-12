@@ -37,6 +37,10 @@
         <lombok.version>1.18.34</lombok.version>
         <mockito.version>5.5.0</mockito.version>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
+        <!-- SonarQube Properties -->
+        <sonar.organization>learnaitools</sonar.organization>
+        <sonar.projectKey>learnaitools_my-awasome-website</sonar.projectKey>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
     <dependencies>
