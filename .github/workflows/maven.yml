@@ -26,4 +26,5 @@ jobs:
           java-version: 21
 
       - name: Build and Test
+        working-directory: backend
         run: mvn clean verify
