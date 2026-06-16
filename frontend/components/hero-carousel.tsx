@@ -77,10 +77,12 @@ export function HeroCarousel() {
                       Book Tickets
                     </Button>
                   </Link>
-                  <Button size="lg" variant="outline" className="gap-2">
-                    <Play className="size-4" />
-                    Watch Trailer
-                  </Button>
+                  <a href={`https://youtube.com/results?search_query=${encodeURIComponent(slide.title + ' trailer')}`} target="_blank" rel="noopener noreferrer">
+                    <Button size="lg" variant="outline" className="gap-2">
+                      <Play className="size-4" />
+                      Watch Trailer
+                    </Button>
+                  </a>
                 </div>
               </div>
             </div>

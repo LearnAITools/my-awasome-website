@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { HeroCarousel } from "@/components/hero-carousel"
@@ -21,10 +22,12 @@ function SectionHeader({
   icon,
   title,
   subtitle,
+  seeAllLink,
 }: {
   icon: React.ReactNode
   title: string
   subtitle: string
+  seeAllLink?: string
 }) {
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
@@ -37,10 +40,12 @@ function SectionHeader({
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </div>
       </div>
-      <button className="hidden items-center gap-1 text-sm font-medium text-primary transition-opacity hover:opacity-80 sm:flex">
-        See all
-        <ChevronRight className="size-4" />
-      </button>
+      {seeAllLink ? (
+        <Link href={seeAllLink} className="hidden items-center gap-1 text-sm font-medium text-primary transition-opacity hover:opacity-80 sm:flex">
+          See all
+          <ChevronRight className="size-4" />
+        </Link>
+      ) : null}
     </div>
   )
 }
@@ -78,6 +83,7 @@ export default function HomePage() {
               icon={<Flame className="size-5" />}
               title="Now Showing"
               subtitle="Book your seats for films playing this week"
+              seeAllLink="/#now-showing"
             />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {nowShowing.map((movie) => (
@@ -112,6 +118,7 @@ export default function HomePage() {
               icon={<Sparkles className="size-5" />}
               title="Coming Soon"
               subtitle="Get notified when these films hit the big screen"
+              seeAllLink="/#coming-soon"
             />
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {comingSoon.map((movie) => (

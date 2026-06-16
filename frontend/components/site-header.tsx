@@ -43,10 +43,12 @@ export function SiteHeader() {
           <span>Mumbai</span>
         </button>
 
-        <Button size="sm" className="gap-1.5">
-          <User className="size-4" />
-          <span className="hidden sm:inline">Sign in</span>
-        </Button>
+        <Link href="/auth/login">
+          <Button size="sm" className="gap-1.5">
+            <User className="size-4" />
+            <span className="hidden sm:inline">Sign in</span>
+          </Button>
+        </Link>
       </div>
     </header>
   )

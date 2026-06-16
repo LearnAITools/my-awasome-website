@@ -4,19 +4,39 @@ import { Clapperboard } from "lucide-react"
 const columns = [
   {
     title: "Movies",
-    links: ["Now Showing", "Coming Soon", "Exclusives", "Film Festivals"],
+    links: [
+      { label: "Now Showing", href: "/#now-showing" },
+      { label: "Coming Soon", href: "/#coming-soon" },
+      { label: "Exclusives", href: "/exclusives" },
+      { label: "Film Festivals", href: "/festivals" },
+    ],
   },
   {
     title: "Cinemas",
-    links: ["IMAX", "4DX", "Recliners", "Find a Cinema"],
+    links: [
+      { label: "IMAX", href: "/cinemas/imax" },
+      { label: "4DX", href: "/cinemas/4dx" },
+      { label: "Recliners", href: "/cinemas/recliners" },
+      { label: "Find a Cinema", href: "/cinemas" },
+    ],
   },
   {
     title: "Company",
-    links: ["About Us", "Careers", "Press", "Contact"],
+    links: [
+      { label: "About Us", href: "/about" },
+      { label: "Careers", href: "/careers" },
+      { label: "Press", href: "/press" },
+      { label: "Contact", href: "/contact" },
+    ],
   },
   {
     title: "Help",
-    links: ["FAQs", "Refund Policy", "Terms of Use", "Privacy"],
+    links: [
+      { label: "FAQs", href: "/faqs" },
+      { label: "Refund Policy", href: "/refund-policy" },
+      { label: "Terms of Use", href: "/terms" },
+      { label: "Privacy", href: "/privacy" },
+    ],
   },
 ]
 
@@ -43,13 +63,13 @@ export function SiteFooter() {
               <h3 className="text-sm font-semibold">{col.title}</h3>
               <ul className="mt-4 flex flex-col gap-2.5">
                 {col.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      {link}
-                    </a>
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
