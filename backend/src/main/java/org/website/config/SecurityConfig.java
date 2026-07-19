@@ -16,11 +16,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.website.security.JwtAuthenticationFilter;
+import org.website.security.JwtTokenProvider;
 
 @Configuration
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig {
+
+    @Autowired
+private JwtTokenProvider jwtTokenProvider;
+
     @Autowired
     private UserDetailsService userDetailsService;
 
@@ -29,10 +34,10 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter();
-    }
+@Bean
+public JwtAuthenticationFilter jwtAuthenticationFilter() {
+    return new JwtAuthenticationFilter(jwtTokenProvider);
+}
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
@@ -54,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/shows/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/seats/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/api/payments/webhook").permitAll()
                 .requestMatchers("/api/bookings/**").authenticated()
                 .requestMatchers("/api/payments/**").authenticated()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -78,7 +78,7 @@ echo ""
 # Start backend
 echo "Starting backend server on port 8080..."
 cd backend
-./gradlew bootRun > ../backend.log 2>&1 &
+mvn clean compile spring-boot:run > ../backend.log 2>&1 &
 BACKEND_PID=$!
 echo -e "${GREEN}✅ Backend started (PID: $BACKEND_PID)${NC}"
 echo "   Logs: backend.log"
