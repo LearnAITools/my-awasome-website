@@ -59,6 +59,7 @@ public JwtAuthenticationFilter jwtAuthenticationFilter() {
                 .requestMatchers(HttpMethod.GET, "/api/shows/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/seats/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/api/payments/webhook").permitAll()
                 .requestMatchers("/api/bookings/**").authenticated()
                 .requestMatchers("/api/payments/**").authenticated()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

@@ -6,14 +6,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.website</groupId>
-    <artifactId>bookmyshow</artifactId>
+    <artifactId>tickettomyshow</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>BookMyShow - Movie Ticket Booking Platform</name>
+    <name>TicketToMyShow - Movie Ticket Booking Platform</name>
     <description>
         Enterprise-grade full-stack movie ticket booking application.
-        Tech Stack: Spring Boot 3.3.10 (Java 21+), Spring Data JPA, H2 Database,
+        Tech Stack: Spring Boot 3.4.0 (Java 17), Spring Data JPA, PostgreSQL, Flyway,
         Razorpay Payment Gateway, Spring Security with JWT, SonarQube Compliance.
     </description>
 
@@ -109,6 +109,19 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+        </dependency>
+
+        <!-- PostgreSQL driver for production runtime -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Flyway database migration support -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
 
         <!-- ==================== TESTING DEPENDENCIES ==================== -->

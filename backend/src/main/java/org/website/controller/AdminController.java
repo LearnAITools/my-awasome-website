@@ -20,7 +20,7 @@ import org.website.service.BookingService;
 import java.util.List;
 
 /**
- * AdminController handles administrative operations for the BookMyShow platform.
+ * AdminController handles administrative operations for the TicketToMyShow platform.
  * All endpoints require ADMIN role authentication.
  */
 @RestController

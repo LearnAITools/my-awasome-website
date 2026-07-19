@@ -323,4 +323,186 @@ public class PaymentService {
         }
         return hexString.toString();
     }
+
+    public void handleWebhookEvent(String payload) {
+        log.info("Processing Razorpay webhook payload");
+
+        try {
+            JSONObject event = new JSONObject(payload);
+            String eventType = event.optString("event");
+            JSONObject payloadObject = event.optJSONObject("payload");
+            if (payloadObject == null) {
+                log.warn("Webhook payload missing payload object");
+                return;
+            }
+
+            if (eventType == null || eventType.isEmpty()) {
+                log.warn("Webhook event type missing");
+                return;
+            }
+
+            String razorpayOrderId = null;
+            String razorpayPaymentId = null;
+
+            if (payloadObject.has("payment")) {
+                JSONObject paymentContainer = payloadObject.optJSONObject("payment");
+                if (paymentContainer != null) {
+                    JSONObject paymentEntity = paymentContainer.optJSONObject("entity");
+                    if (paymentEntity != null) {
+                        razorpayOrderId = paymentEntity.optString("order_id", null);
+                        razorpayPaymentId = paymentEntity.optString("id", null);
+                    }
+                }
+            }
+
+            if (razorpayOrderId == null && payloadObject.has("refund")) {
+                JSONObject refundContainer = payloadObject.optJSONObject("refund");
+                if (refundContainer != null) {
+                    JSONObject refundEntity = refundContainer.optJSONObject("entity");
+                    if (refundEntity != null) {
+                        razorpayPaymentId = refundEntity.optString("payment_id", null);
+                    }
+                }
+            }
+
+            switch (eventType) {
+                case "payment.captured" -> handlePaymentCaptured(razorpayOrderId, razorpayPaymentId);
+                case "payment.failed" -> handlePaymentFailed(razorpayOrderId, razorpayPaymentId);
+                case "refund.processed", "refund.created", "refund.updated" -> handleRefundProcessed(razorpayOrderId, razorpayPaymentId);
+                default -> log.debug("Ignoring unhandled Razorpay webhook event: {}", eventType);
+            }
+        } catch (Exception e) {
+            log.error("Error processing Razorpay webhook payload", e);
+        }
+    }
+
+    private void handlePaymentCaptured(String orderId, String paymentId) {
+        if (orderId == null || paymentId == null) {
+            log.warn("Missing order_id or payment_id for payment.captured webhook");
+            return;
+        }
+
+        paymentRepository.findByRazorpayOrderId(orderId).ifPresent(payment -> {
+            payment.setRazorpayPaymentId(paymentId);
+            payment.setStatus(PaymentStatus.COMPLETED);
+            payment.setCompletedAt(LocalDateTime.now());
+            paymentRepository.save(payment);
+
+            Booking booking = payment.getBooking();
+            booking.setStatus(BookingStatus.CONFIRMED);
+            booking.setPaymentTime(LocalDateTime.now());
+            bookingRepository.save(booking);
+
+            for (Seat seat : booking.getSeats()) {
+                seat.setStatus(SeatStatus.BOOKED);
+                seatRepository.save(seat);
+            }
+
+            log.info("Processed payment.captured webhook for order: {} and booking: {}", orderId, booking.getBookingReference());
+        });
+    }
+
+    private void handlePaymentFailed(String orderId, String paymentId) {
+        String identifier = orderId != null ? orderId : paymentId;
+        if (identifier == null) {
+            log.warn("Missing identifier for payment.failed webhook");
+            return;
+        }
+
+        paymentRepository.findByRazorpayOrderId(orderId).ifPresentOrElse(payment -> {
+            payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+
+            Booking booking = payment.getBooking();
+            log.info("Processing failed payment for booking: {}", booking.getBookingReference());
+            for (Seat seat : booking.getSeats()) {
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seatRepository.save(seat);
+            }
+        }, () -> {
+            if (paymentId != null) {
+                paymentRepository.findByRazorpayPaymentId(paymentId).ifPresent(payment -> {
+                    payment.setStatus(PaymentStatus.FAILED);
+                    paymentRepository.save(payment);
+                    for (Seat seat : payment.getBooking().getSeats()) {
+                        seat.setStatus(SeatStatus.AVAILABLE);
+                        seatRepository.save(seat);
+                    }
+                });
+            }
+        });
+    }
+
+    private void handleRefundProcessed(String orderId, String paymentId) {
+        if (paymentId == null) {
+            log.warn("Missing payment_id for refund webhook");
+            return;
+        }
+
+        paymentRepository.findByRazorpayPaymentId(paymentId).ifPresent(payment -> {
+            payment.setStatus(PaymentStatus.REFUNDED);
+            paymentRepository.save(payment);
+
+            Booking booking = payment.getBooking();
+            booking.setStatus(BookingStatus.REFUNDED);
+            bookingRepository.save(booking);
+
+            for (Seat seat : booking.getSeats()) {
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seatRepository.save(seat);
+            }
+
+            log.info("Processed refund webhook for booking: {}", booking.getBookingReference());
+        });
+    }
+
+    public boolean refundBooking(Long userId, String bookingReference) {
+        Booking booking = bookingRepository.findByBookingReference(bookingReference)
+            .orElseThrow(() -> new IllegalArgumentException("Booking not found with reference: " + bookingReference));
+
+        if (!booking.getUser().getId().equals(userId)) {
+            log.warn("Unauthorized refund request for booking: {} by user: {}", bookingReference, userId);
+            throw new IllegalArgumentException("Unauthorized access to booking");
+        }
+
+        if (!BookingStatus.CONFIRMED.equals(booking.getStatus())) {
+            log.warn("Refund request invalid for booking {} with status {}", bookingReference, booking.getStatus());
+            throw new IllegalStateException("Only confirmed bookings can be refunded");
+        }
+
+        Payment payment = paymentRepository.findByBookingId(booking.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Payment record not found for booking: " + bookingReference));
+
+        if (payment.getRazorpayPaymentId() == null) {
+            throw new IllegalStateException("Cannot refund payment without a Razorpay payment ID");
+        }
+
+        try {
+            if (razorpayClient == null) {
+                razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+            }
+
+            JSONObject refundRequest = new JSONObject();
+            refundRequest.put("payment_id", payment.getRazorpayPaymentId());
+            com.razorpay.Refund refundResponse = razorpayClient.payments.refund(payment.getRazorpayPaymentId(), refundRequest);
+
+            log.info("Refund request sent to Razorpay for paymentId={}, refundId={}", payment.getRazorpayPaymentId(), refundResponse.get("id"));
+
+            payment.setStatus(PaymentStatus.REFUNDED);
+            paymentRepository.save(payment);
+
+            booking.setStatus(BookingStatus.REFUNDED);
+            bookingRepository.save(booking);
+
+            for (Seat seat : booking.getSeats()) {
+                seat.setStatus(SeatStatus.AVAILABLE);
+                seatRepository.save(seat);
+            }
+
+            return true;
+        } catch (RazorpayException e) {
+            log.error("Failed to refund payment for booking {}: {}", bookingReference, e.getMessage(), e);
+            throw new IllegalStateException("Refund failed: " + e.getMessage());
+        }
+    }
 }

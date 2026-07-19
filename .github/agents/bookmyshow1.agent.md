@@ -1,5 +1,5 @@
 # Enterprise Multi-Agent Blueprint: BookMyShow Clone
-**Tech Stack:** React (Vite) + Java (Spring Boot, Gradle) + Local H2 Database + Razorpay Sandbox + SonarQube Compliance
+**Tech Stack:** React (Vite) + Java (Spring Boot,Microservices, Maven) + Local H2 Database + Razorpay Sandbox + SonarQube Compliance + Test Coverage + Tailwind CSS + JWT Authentication + Email/SMS Notifications
 
 ---
 
@@ -11,7 +11,7 @@ You are a Lead Software Architect. Your task is to initialize a clean, modular, 
 1. Generate a standardized, cross-platform file tree layout separating backend and frontend domains.
 2. Formulate proper dependency manifests ensuring all build tasks run cleanly without cross-environment collisions.
 3. Configure **React (Vite + JavaScript)** for the UI folder structure.
-4. Configure **Java Spring Boot (Maven)** targeting Java 21+ for the backend services folder.
+4. Configure **Java Spring Boot (Maven)** targeting Java newer compatible versions for the backend services folder.
 
 ### Outputs Required
 * **Workspace Tree Structure Visual Diagram**

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.website.dto.PaymentOrderRequest;
 import org.website.dto.PaymentOrderResponse;
 import org.website.dto.PaymentVerifyRequest;
+import org.website.dto.RefundRequest;
 import org.website.service.PaymentService;
 
 /**
@@ -195,5 +196,21 @@ public class PaymentController {
             log.error("Payment verification failed for order: {}", request.getRazorpayOrderId());
             return ResponseEntity.badRequest().body("Payment verification failed");
         }
+    }
+
+    @PostMapping("/refund")
+    public ResponseEntity<String> refundBooking(
+            @RequestAttribute("userId") Long userId,
+            @RequestBody RefundRequest request) {
+        log.info("Processing refund for booking reference: {} by user: {}", request.getBookingReference(), userId);
+        boolean refunded = paymentService.refundBooking(userId, request.getBookingReference());
+
+        if (refunded) {
+            log.info("Refund successfully initiated for booking reference: {}", request.getBookingReference());
+            return ResponseEntity.ok("Refund initiated successfully");
+        }
+
+        log.error("Refund initiation failed for booking reference: {}", request.getBookingReference());
+        return ResponseEntity.status(500).body("Refund could not be processed");
     }
 }
