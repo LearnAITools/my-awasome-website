@@ -25,6 +25,9 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
+    @Column
+    private String profilePictureUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;

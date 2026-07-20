@@ -34,7 +34,7 @@
         <!-- Dependency Versions -->
         <razorpay.version>1.4.5</razorpay.version>
         <jjwt.version>0.12.3</jjwt.version>
-        <lombok.version>1.18.34</lombok.version>
+        <lombok.version>1.18.36</lombok.version>
         <mockito.version>5.5.0</mockito.version>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
         <!-- SonarQube Properties -->

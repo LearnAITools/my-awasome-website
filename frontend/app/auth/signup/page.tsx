@@ -45,7 +45,7 @@ export default function SignupPage() {
 
     try {
       const response = await authService.signup({
-        name: formData.name,
+        fullName: formData.name,
         email: formData.email,
         password: formData.password,
       })

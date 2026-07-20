@@ -1,0 +1,489 @@
+{
+  "info": {
+    "_postman_id": "5b6c28f7-8a3c-4f2f-8aa6-9e1ad066f4d2",
+    "name": "TicketToMyShow API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for TicketToMyShow backend APIs with default request payloads."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080/api",
+      "description": "Backend API base URL"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "description": "Bearer token returned by /auth/login"
+    },
+    {
+      "key": "razorpay_signature",
+      "value": "",
+      "description": "Razorpay webhook signature header"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePassword123\",\n  \"fullName\": \"John Doe\"\n}"
+            },
+            "url": "{{base_url}}/auth/signup"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePassword123\"\n}"
+            },
+            "url": "{{base_url}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get current user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/users/me"
+          }
+        },
+        {
+          "name": "Update profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"profilePictureUrl\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": "{{base_url}}/users/me"
+          }
+        },
+        {
+          "name": "Request email change OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEmail\": \"new-email@example.com\"\n}"
+            },
+            "url": "{{base_url}}/users/me/email/request-otp"
+          }
+        },
+        {
+          "name": "Verify email change OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEmail\": \"new-email@example.com\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": "{{base_url}}/users/me/email/verify-otp"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"showId\": 1,\n  \"selectedSeats\": [\n    101,\n    102,\n    103\n  ]\n}"
+            },
+            "url": "{{base_url}}/bookings"
+          }
+        },
+        {
+          "name": "Get booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/bookings/1"
+          }
+        },
+        {
+          "name": "Get booking by reference",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/bookings/reference/BK-20260530-001"
+          }
+        },
+        {
+          "name": "Get user bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/bookings/user"
+          }
+        },
+        {
+          "name": "Cancel booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/bookings/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create payment order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingReference\": \"BK-20260530-001\"\n}"
+            },
+            "url": "{{base_url}}/payments/create-order"
+          }
+        },
+        {
+          "name": "Verify payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpayPaymentId\": \"pay_MBD7vg4jKJFtQe\",\n  \"razorpayOrderId\": \"order_MBD7ukQ69xz6qJ\",\n  \"razorpaySignature\": \"9ef4dffbfd84f1318f6739a3ce19f9d85851857ae648f114332d8401e0949a3d\"\n}"
+            },
+            "url": "{{base_url}}/payments/verify"
+          }
+        },
+        {
+          "name": "Refund booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingReference\": \"BK-20260530-001\"\n}"
+            },
+            "url": "{{base_url}}/payments/refund"
+          }
+        },
+        {
+          "name": "Razorpay webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Razorpay-Signature",
+                "value": "{{razorpay_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entity\": \"event\",\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_MBD7vg4jKJFtQe\",\n        \"order_id\": \"order_MBD7ukQ69xz6qJ\"\n      }\n    }\n  }\n}"
+            },
+            "url": "{{base_url}}/payments/webhook"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Movies",
+      "item": [
+        {
+          "name": "Get all movies",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/movies"
+          }
+        },
+        {
+          "name": "Get movie by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/movies/1"
+          }
+        },
+        {
+          "name": "Search movies",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/movies/search?title=Kalki"
+          }
+        },
+        {
+          "name": "Filter movies by genre",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/movies/genre/Action"
+          }
+        },
+        {
+          "name": "Filter movies by language",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/movies/language/Hindi"
+          }
+        },
+        {
+          "name": "Create movie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Movie\",\n  \"genre\": \"Action\",\n  \"language\": \"Hindi\",\n  \"duration\": 150,\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"rating\": 8.0,\n  \"releaseDate\": \"2026-06-15\",\n  \"description\": \"An exciting new action movie\"\n}"
+            },
+            "url": "{{base_url}}/movies"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shows",
+      "item": [
+        {
+          "name": "Get all shows",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/shows"
+          }
+        },
+        {
+          "name": "Get show by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/shows/1"
+          }
+        },
+        {
+          "name": "Get shows by movie",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/shows/movie/1"
+          }
+        },
+        {
+          "name": "Get shows by theater",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/shows/theater/1"
+          }
+        },
+        {
+          "name": "Create show",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 1,\n  \"theaterId\": 1,\n  \"screen\": \"Screen 1\",\n  \"showTime\": \"2026-06-01T18:00:00\",\n  \"pricePerSeat\": 25000\n}"
+            },
+            "url": "{{base_url}}/shows"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Create movie (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Admin Movie\",\n  \"genre\": \"Action\",\n  \"language\": \"English\",\n  \"duration\": 140,\n  \"posterUrl\": \"https://example.com/poster.jpg\",\n  \"rating\": 7.5,\n  \"releaseDate\": \"2026-08-01\",\n  \"description\": \"Admin added movie.\"\n}"
+            },
+            "url": "{{base_url}}/admin/movies"
+          }
+        },
+        {
+          "name": "Create show (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": 1,\n  \"theaterId\": 1,\n  \"screen\": \"Screen 1\",\n  \"showTime\": \"2026-08-01T20:00:00\",\n  \"pricePerSeat\": 25000\n}"
+            },
+            "url": "{{base_url}}/admin/shows"
+          }
+        },
+        {
+          "name": "Get all bookings (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": "{{base_url}}/admin/bookings"
+          }
+        }
+      ]
+    }
+  ]
+}

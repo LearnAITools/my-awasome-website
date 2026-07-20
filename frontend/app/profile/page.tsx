@@ -6,18 +6,26 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { Clapperboard, LogOut, User, Mail, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { authService } from '@/lib/api'
+import { authService, type AuthUser } from '@/lib/api'
 import { useEffect, useState } from 'react'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
-    setIsLoggedIn(!!token)
-    setLoading(false)
+    const currentUser = authService.getCurrentUser()
+    setUser(currentUser)
+
+    if (currentUser) {
+      authService.fetchCurrentUser()
+        .then(setUser)
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const handleLogout = () => {
@@ -37,7 +45,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (!isLoggedIn) {
+  if (!user) {
     return (
       <div className="flex min-h-screen flex-col">
         <SiteHeader />
@@ -66,14 +74,20 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center size-16 rounded-full bg-primary/15 mb-4 mx-auto">
                 <User className="size-8 text-primary" />
               </div>
-              <h2 className="text-lg font-bold text-center mb-1">User Name</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">user@example.com</p>
+              <h2 className="text-lg font-bold text-center mb-1">{user.fullName}</h2>
+              <p className="text-sm text-muted-foreground text-center mb-6">{user.email}</p>
 
               <div className="space-y-2">
                 <Link href="/profile" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <User className="size-4 mr-2" />
                     My Profile
+                  </Button>
+                </Link>
+                <Link href="/profile/edit" className="block">
+                  <Button variant="outline" className="w-full justify-start">
+                    <User className="size-4 mr-2" />
+                    Edit Profile
                   </Button>
                 </Link>
                 <Link href="/bookings" className="block">
@@ -102,6 +116,7 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium mb-2">Full Name</label>
                   <div className="p-3 rounded-lg bg-background border border-border/60">
                     <p className="text-foreground">User Name</p>
+                    <p className="text-foreground">{user.fullName}</p>
                   </div>
                 </div>
 
@@ -109,7 +124,7 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium mb-2">Email</label>
                   <div className="p-3 rounded-lg bg-background border border-border/60 flex items-center gap-2">
                     <Mail className="size-4 text-muted-foreground" />
-                    <p className="text-foreground">user@example.com</p>
+                    <p className="text-foreground">{user.email}</p>
                   </div>
                 </div>
 

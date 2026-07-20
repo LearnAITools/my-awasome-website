@@ -24,7 +24,7 @@ import org.website.security.JwtTokenProvider;
 public class SecurityConfig {
 
     @Autowired
-private JwtTokenProvider jwtTokenProvider;
+    private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -34,10 +34,10 @@ private JwtTokenProvider jwtTokenProvider;
         return new BCryptPasswordEncoder();
     }
 
-@Bean
-public JwtAuthenticationFilter jwtAuthenticationFilter() {
-    return new JwtAuthenticationFilter(jwtTokenProvider);
-}
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider);
+    }
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
