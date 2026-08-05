@@ -51,8 +51,8 @@ function SectionHeader({
 }
 
 export default function HomePage() {
-  const nowShowing = movies.filter((m) => m.status === "now-showing")
-  const comingSoon = movies.filter((m) => m.status === "coming-soon")
+  const nowShowing = movies.filter((movie) => movie.status === "now-showing")
+  const comingSoon = movies.filter((movie) => movie.status === "coming-soon")
 
   return (
     <div className="flex min-h-screen flex-col">

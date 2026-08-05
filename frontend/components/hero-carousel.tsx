@@ -11,13 +11,21 @@ export function HeroCarousel() {
   const [index, setIndex] = useState(0)
   const count = heroSlides.length
 
-  const goTo = useCallback((i: number) => setIndex((i + count) % count), [count])
+  const goTo = useCallback((nextIndex: number) => {
+    setIndex((nextIndex + count) % count)
+  }, [count])
+
   const next = useCallback(() => goTo(index + 1), [goTo, index])
   const prev = useCallback(() => goTo(index - 1), [goTo, index])
 
   useEffect(() => {
-    const t = setInterval(() => setIndex((i) => (i + 1) % count), 6000)
-    return () => clearInterval(t)
+    if (count <= 1) return
+
+    const timerId = window.setInterval(() => {
+      setIndex((currentIndex) => (currentIndex + 1) % count)
+    }, 6000)
+
+    return () => window.clearInterval(timerId)
   }, [count])
 
   return (

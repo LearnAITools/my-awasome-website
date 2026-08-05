@@ -5,7 +5,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'Cinemax — Book Movie Tickets',
   description: 'Premium movie ticket booking. Browse now showing films, pick your seats, and book in seconds.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -30,15 +29,12 @@ export const viewport: Viewport = {
   themeColor: '#1a1422',
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="bg-background">
-      <body className="font-sans antialiased">{children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+      <body className="font-sans antialiased">
+        {children}
+        {process.env.NODE_ENV === 'production' ? <Analytics /> : null}
       </body>
     </html>
   )
