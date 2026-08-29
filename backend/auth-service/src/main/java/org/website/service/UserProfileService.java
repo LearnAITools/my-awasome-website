@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Slf4j
 @Transactional
-public class UserProfileService {
+public class UserProfileService implements UserProfileServicePort {
     private static final int OTP_TTL_MINUTES = 10;
     private static final SecureRandom RANDOM = new SecureRandom();
 

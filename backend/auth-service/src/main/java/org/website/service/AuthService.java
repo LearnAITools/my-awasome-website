@@ -18,7 +18,7 @@ import org.website.security.JwtTokenProvider;
 @Service
 @Slf4j
 @Transactional
-public class AuthService {
+public class AuthService implements AuthServicePort {
 
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;

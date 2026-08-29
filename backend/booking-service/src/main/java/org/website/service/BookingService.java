@@ -1,11 +1,11 @@
 package org.website.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.website.dto.BookingRequest;
+import org.website.internal.api.UserIdentityGateway;
 import org.website.dto.BookingResponse;
 import org.website.exception.ResourceNotFoundException;
 import org.website.exception.SeatAlreadyBookedException;
@@ -60,18 +60,24 @@ import java.util.UUID;
 @Service
 @Slf4j
 @Transactional
-public class BookingService {
+public class BookingService implements BookingServicePort {
 
-    private BookingRepository bookingRepository;
-    private SeatRepository seatRepository;
-    private ShowRepository showRepository;
-    private UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final SeatRepository seatRepository;
+    private final ShowRepository showRepository;
+    private final UserRepository userRepository;
+    private final UserIdentityGateway userIdentityGateway;
 
-    BookingService(BookingRepository bookingRepository, SeatRepository seatRepository, ShowRepository showRepository, UserRepository userRepository) {
+    BookingService(BookingRepository bookingRepository,
+                   SeatRepository seatRepository,
+                   ShowRepository showRepository,
+                   UserRepository userRepository,
+                   UserIdentityGateway userIdentityGateway) {
         this.bookingRepository = bookingRepository;
         this.seatRepository = seatRepository;
         this.showRepository = showRepository;
         this.userRepository = userRepository;
+        this.userIdentityGateway = userIdentityGateway;
     }
 
     /**
@@ -109,6 +115,13 @@ public class BookingService {
         
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        try {
+            userIdentityGateway.getUserSummary(userId);
+        } catch (Exception ex) {
+            log.warn("User identity lookup to auth service failed for user {}. Falling back to local validation. Cause: {}",
+                    userId, ex.getMessage());
+        }
 
         Show show = showRepository.findById(request.showId())
             .orElseThrow(() -> new ResourceNotFoundException("Show not found with ID: " + request.showId()));
@@ -161,11 +174,11 @@ public class BookingService {
      */
     public BookingResponse getBookingById(Long bookingId, Long userId) {
         log.debug("Retrieving booking: {} for user: {}", bookingId, userId);
-        
+
         Booking booking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
 
-        if (!booking.getUser().getId().equals(userId)) {
+        if (!bookingRepository.existsByIdAndUserId(bookingId, userId)) {
             log.warn("[ERR002] Unauthorized access attempt to booking: {} by user: {}", bookingId, userId);
             throw new IllegalArgumentException("Unauthorized access to booking");
         }
@@ -189,11 +202,11 @@ public class BookingService {
      */
     public BookingResponse getBookingByReference(String reference, Long userId) {
         log.debug("Retrieving booking by reference: {} for user: {}", reference, userId);
-        
+
         Booking booking = bookingRepository.findByBookingReference(reference)
             .orElseThrow(() -> new ResourceNotFoundException("Booking not found with reference: " + reference));
 
-        if (!booking.getUser().getId().equals(userId)) {
+        if (!bookingRepository.existsByIdAndUserId(booking.getId(), userId)) {
             log.warn("[ERR002] Unauthorized access attempt to booking reference: {} by user: {}", reference, userId);
             throw new IllegalArgumentException("Unauthorized access to booking");
         }
@@ -249,11 +262,11 @@ public class BookingService {
      */
     public void cancelBooking(Long bookingId, Long userId) {
         log.debug("Canceling booking: {} for user: {}", bookingId, userId);
-        
+
         Booking booking = bookingRepository.findById(bookingId)
             .orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
 
-        if (!booking.getUser().getId().equals(userId)) {
+        if (!bookingRepository.existsByIdAndUserId(bookingId, userId)) {
             log.warn("[ERR002] Unauthorized cancellation attempt for booking: {} by user: {}", bookingId, userId);
             throw new IllegalArgumentException("Unauthorized access to booking");
         }

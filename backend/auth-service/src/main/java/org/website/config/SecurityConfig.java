@@ -1,7 +1,6 @@
 package org.website.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,32 +10,26 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.website.security.JwtAuthenticationFilter;
-import org.website.security.JwtTokenProvider;
 
 @Configuration
 @EnableWebSecurity
 @Slf4j
 public class SecurityConfig {
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtTokenProvider);
+    public SecurityConfig(UserDetailsService userDetailsService,
+                         JwtAuthenticationFilter jwtAuthenticationFilter,
+                         PasswordEncoder passwordEncoder) {
+        this.userDetailsService = userDetailsService;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
@@ -44,7 +37,7 @@ public class SecurityConfig {
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder
             .userDetailsService(userDetailsService)
-            .passwordEncoder(passwordEncoder());
+            .passwordEncoder(passwordEncoder);
         return authenticationManagerBuilder.build();
     }
 
@@ -66,7 +59,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

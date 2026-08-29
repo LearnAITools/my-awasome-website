@@ -16,9 +16,11 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_id", nullable = false)
-    private Booking booking;
+    @Column(nullable = false, unique = true)
+    private String bookingReference;
+
+    @Column(nullable = false)
+    private Long userId;
 
     @Column(nullable = false, unique = true)
     private String razorpayOrderId;
@@ -42,8 +44,9 @@ public class Payment {
     @Column
     private LocalDateTime completedAt;
 
-    public Payment(Booking booking, String razorpayOrderId, Long amountInCents, PaymentStatus status) {
-        this.booking = booking;
+    public Payment(String bookingReference, Long userId, String razorpayOrderId, Long amountInCents, PaymentStatus status) {
+        this.bookingReference = bookingReference;
+        this.userId = userId;
         this.razorpayOrderId = razorpayOrderId;
         this.amountInCents = amountInCents;
         this.status = status;

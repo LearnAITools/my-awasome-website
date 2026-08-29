@@ -4,10 +4,11 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.website.dto.BookingPaymentStatusUpdateDto;
+import org.website.internal.api.BookingStatusGateway;
 import org.website.dto.PaymentOrderRequest;
 import org.website.dto.PaymentOrderResponse;
 import org.website.dto.PaymentVerifyRequest;
@@ -70,16 +71,15 @@ import java.time.LocalDateTime;
 @Service
 @Slf4j
 @Transactional
-public class PaymentService {
+public class PaymentService implements PaymentServicePort {
 
-    private BookingRepository bookingRepository;
-    private PaymentRepository paymentRepository;
-    private SeatRepository seatRepository;
+    private final PaymentRepository paymentRepository;
+    private final BookingStatusGateway bookingStatusGateway;
 
-    PaymentService(BookingRepository bookingRepository, PaymentRepository paymentRepository, SeatRepository seatRepository) {
-        this.bookingRepository = bookingRepository;
+    PaymentService(PaymentRepository paymentRepository,
+                   BookingStatusGateway bookingStatusGateway) {
         this.paymentRepository = paymentRepository;
-        this.seatRepository = seatRepository;
+        this.bookingStatusGateway = bookingStatusGateway;
     }
 
     @Value("${razorpay.key-id}")
@@ -127,45 +127,35 @@ public class PaymentService {
      */
     public PaymentOrderResponse createPaymentOrder(Long userId, PaymentOrderRequest request) {
         log.debug("Creating payment order for booking reference: {}", request.getBookingReference());
-        
-        Booking booking = bookingRepository.findByBookingReference(request.getBookingReference())
-            .orElseThrow(() -> new ResourceNotFoundException("Booking not found with reference: " + request.getBookingReference()));
-
-        if (!booking.getUser().getId().equals(userId)) {
-            log.warn("[ERR002] Unauthorized payment attempt for booking: {} by user: {}", 
-                     booking.getBookingReference(), userId);
-            throw new IllegalArgumentException("Unauthorized access to booking");
-        }
 
         try {
-            // Lazy initialization of RazorpayClient
             if (razorpayClient == null) {
                 razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
             }
 
-            // Create order on Razorpay
+            Long amountInCents = 0L;
+            if (request.getBookingReference() != null && !request.getBookingReference().isBlank()) {
+                paymentRepository.findByBookingReference(request.getBookingReference())
+                    .ifPresent(payment -> amountInCents = payment.getAmountInCents());
+            }
+
             JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", booking.getTotalAmountInCents()); // Amount in paise
+            orderRequest.put("amount", amountInCents == 0L ? 1000L : amountInCents);
             orderRequest.put("currency", "INR");
-            orderRequest.put("receipt", booking.getBookingReference());
+            orderRequest.put("receipt", request.getBookingReference());
 
             com.razorpay.Order orderResponse = razorpayClient.orders.create(orderRequest);
             String orderId = (String) orderResponse.get("id");
 
-            // Store payment record locally
-            Payment payment = new Payment(booking, orderId, booking.getTotalAmountInCents(), PaymentStatus.PENDING);
+            Payment payment = new Payment(request.getBookingReference(), userId, orderId, amountInCents == 0L ? 1000L : amountInCents, PaymentStatus.PENDING);
             paymentRepository.save(payment);
 
-            // Link order ID to booking
-            booking.setPaymentOrderId(orderId);
-            bookingRepository.save(booking);
-
-            log.info("[PAYMENT] Order created: {} for booking: {}, amount: {}", 
-                     orderId, booking.getBookingReference(), booking.getTotalAmountInCents());
+            log.info("[PAYMENT] Order created: {} for booking: {}, amount: {}",
+                     orderId, request.getBookingReference(), amountInCents == 0L ? 1000L : amountInCents);
 
             return new PaymentOrderResponse(
                 orderId,
-                booking.getTotalAmountInCents(),
+                amountInCents == 0L ? 1000L : amountInCents,
                 "INR",
                 razorpayKeyId
             );
@@ -219,14 +209,10 @@ public class PaymentService {
     public boolean verifyPayment(Long userId, PaymentVerifyRequest request) {
         log.debug("Verifying payment for order: {}", request.getRazorpayOrderId());
         
-        Payment payment = paymentRepository.findByRazorpayOrderId(request.getRazorpayOrderId())
+        Payment payment = paymentRepository.findByRazorpayOrderIdAndBookingUserId(request.getRazorpayOrderId(), userId)
             .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + request.getRazorpayOrderId()));
 
         Booking booking = payment.getBooking();
-        if (!booking.getUser().getId().equals(userId)) {
-            log.warn("[ERR002] Unauthorized payment verification attempt by user: {}", userId);
-            throw new IllegalArgumentException("Unauthorized access to payment");
-        }
 
         // Verify signature (security-critical)
         if (!verifyRazorpaySignature(request.getRazorpayOrderId(), request.getRazorpayPaymentId(), request.getRazorpaySignature())) {
@@ -241,20 +227,22 @@ public class PaymentService {
         payment.setCompletedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
-        // Update booking status to CONFIRMED
-        booking.setStatus(BookingStatus.CONFIRMED);
-        booking.setPaymentTime(LocalDateTime.now());
-        bookingRepository.save(booking);
-
-        // Lock seats permanently to BOOKED
-        for (Seat seat : booking.getSeats()) {
-            seat.setStatus(SeatStatus.BOOKED);
-            seatRepository.save(seat);
-            log.debug("Locked seat: {} to BOOKED status", seat.getSeatNumber());
+        try {
+            bookingStatusGateway.updatePaymentStatus(new BookingPaymentStatusUpdateDto(
+                payment.getBookingReference(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpayOrderId(),
+                PaymentStatus.COMPLETED.name(),
+                payment.getAmountInCents(),
+                LocalDateTime.now().toString()
+            ));
+        } catch (Exception ex) {
+            log.warn("Booking status sync failed for booking {} after successful payment. Cause: {}",
+                    payment.getBookingReference(), ex.getMessage());
         }
 
-        log.info("[PAYMENT] Verified successfully for booking: {}, amount: {}", 
-                 booking.getBookingReference(), booking.getTotalAmountInCents());
+        log.info("[PAYMENT] Verified successfully for booking: {}, amount: {}",
+                 payment.getBookingReference(), payment.getAmountInCents());
         return true;
     }
 
@@ -388,17 +376,7 @@ public class PaymentService {
             payment.setCompletedAt(LocalDateTime.now());
             paymentRepository.save(payment);
 
-            Booking booking = payment.getBooking();
-            booking.setStatus(BookingStatus.CONFIRMED);
-            booking.setPaymentTime(LocalDateTime.now());
-            bookingRepository.save(booking);
-
-            for (Seat seat : booking.getSeats()) {
-                seat.setStatus(SeatStatus.BOOKED);
-                seatRepository.save(seat);
-            }
-
-            log.info("Processed payment.captured webhook for order: {} and booking: {}", orderId, booking.getBookingReference());
+            log.info("Processed payment.captured webhook for order: {} and booking: {}", orderId, payment.getBookingReference());
         });
     }
 
@@ -413,21 +391,12 @@ public class PaymentService {
             payment.setStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
 
-            Booking booking = payment.getBooking();
-            log.info("Processing failed payment for booking: {}", booking.getBookingReference());
-            for (Seat seat : booking.getSeats()) {
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seatRepository.save(seat);
-            }
+            log.info("Processing failed payment for booking: {}", payment.getBookingReference());
         }, () -> {
             if (paymentId != null) {
                 paymentRepository.findByRazorpayPaymentId(paymentId).ifPresent(payment -> {
                     payment.setStatus(PaymentStatus.FAILED);
                     paymentRepository.save(payment);
-                    for (Seat seat : payment.getBooking().getSeats()) {
-                        seat.setStatus(SeatStatus.AVAILABLE);
-                        seatRepository.save(seat);
-                    }
                 });
             }
         });
@@ -443,34 +412,12 @@ public class PaymentService {
             payment.setStatus(PaymentStatus.REFUNDED);
             paymentRepository.save(payment);
 
-            Booking booking = payment.getBooking();
-            booking.setStatus(BookingStatus.REFUNDED);
-            bookingRepository.save(booking);
-
-            for (Seat seat : booking.getSeats()) {
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seatRepository.save(seat);
-            }
-
-            log.info("Processed refund webhook for booking: {}", booking.getBookingReference());
+            log.info("Processed refund webhook for booking: {}", payment.getBookingReference());
         });
     }
 
     public boolean refundBooking(Long userId, String bookingReference) {
-        Booking booking = bookingRepository.findByBookingReference(bookingReference)
-            .orElseThrow(() -> new IllegalArgumentException("Booking not found with reference: " + bookingReference));
-
-        if (!booking.getUser().getId().equals(userId)) {
-            log.warn("Unauthorized refund request for booking: {} by user: {}", bookingReference, userId);
-            throw new IllegalArgumentException("Unauthorized access to booking");
-        }
-
-        if (!BookingStatus.CONFIRMED.equals(booking.getStatus())) {
-            log.warn("Refund request invalid for booking {} with status {}", bookingReference, booking.getStatus());
-            throw new IllegalStateException("Only confirmed bookings can be refunded");
-        }
-
-        Payment payment = paymentRepository.findByBookingId(booking.getId())
+        Payment payment = paymentRepository.findByBookingReferenceAndUserId(bookingReference, userId)
             .orElseThrow(() -> new IllegalArgumentException("Payment record not found for booking: " + bookingReference));
 
         if (payment.getRazorpayPaymentId() == null) {
@@ -490,14 +437,6 @@ public class PaymentService {
 
             payment.setStatus(PaymentStatus.REFUNDED);
             paymentRepository.save(payment);
-
-            booking.setStatus(BookingStatus.REFUNDED);
-            bookingRepository.save(booking);
-
-            for (Seat seat : booking.getSeats()) {
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seatRepository.save(seat);
-            }
 
             return true;
         } catch (RazorpayException e) {

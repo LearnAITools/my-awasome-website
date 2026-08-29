@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Deprecated(since = "2026-08-29", forRemoval = true)
 @Entity
 @Table(name = "bookings")
 @Data
