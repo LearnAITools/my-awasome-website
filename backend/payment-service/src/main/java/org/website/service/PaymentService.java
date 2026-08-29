@@ -127,11 +127,11 @@ public class PaymentService implements PaymentServicePort {
                 razorpayClient = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
             }
 
-            Long amountInCents = 0L;
-            if (request.getBookingReference() != null && !request.getBookingReference().isBlank()) {
-                paymentRepository.findByBookingReference(request.getBookingReference())
-                    .ifPresent(payment -> amountInCents = payment.getAmountInCents());
-            }
+            Long amountInCents = request.getBookingReference() != null && !request.getBookingReference().isBlank()
+                ? paymentRepository.findByBookingReference(request.getBookingReference())
+                    .map(Payment::getAmountInCents)
+                    .orElse(0L)
+                : 0L;
 
             JSONObject orderRequest = new JSONObject();
             orderRequest.put("amount", amountInCents == 0L ? 1000L : amountInCents);
@@ -203,7 +203,7 @@ public class PaymentService implements PaymentServicePort {
     public boolean verifyPayment(Long userId, PaymentVerifyRequest request) {
         log.debug("Verifying payment for order: {}", request.getRazorpayOrderId());
         
-        Payment payment = paymentRepository.findByRazorpayOrderIdAndBookingUserId(request.getRazorpayOrderId(), userId)
+        Payment payment = paymentRepository.findByRazorpayOrderIdAndUserId(request.getRazorpayOrderId(), userId)
             .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + request.getRazorpayOrderId()));
 
         // Verify signature (security-critical)
