@@ -14,15 +14,9 @@ import org.website.dto.PaymentOrderResponse;
 import org.website.dto.PaymentVerifyRequest;
 import org.website.exception.InvalidPaymentException;
 import org.website.exception.ResourceNotFoundException;
-import org.website.model.Booking;
-import org.website.model.BookingStatus;
 import org.website.model.Payment;
 import org.website.model.PaymentStatus;
-import org.website.model.Seat;
-import org.website.model.SeatStatus;
-import org.website.repository.BookingRepository;
 import org.website.repository.PaymentRepository;
-import org.website.repository.SeatRepository;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -211,8 +205,6 @@ public class PaymentService implements PaymentServicePort {
         
         Payment payment = paymentRepository.findByRazorpayOrderIdAndBookingUserId(request.getRazorpayOrderId(), userId)
             .orElseThrow(() -> new ResourceNotFoundException("Payment not found for order: " + request.getRazorpayOrderId()));
-
-        Booking booking = payment.getBooking();
 
         // Verify signature (security-critical)
         if (!verifyRazorpaySignature(request.getRazorpayOrderId(), request.getRazorpayPaymentId(), request.getRazorpaySignature())) {
